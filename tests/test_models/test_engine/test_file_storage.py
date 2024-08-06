@@ -36,10 +36,12 @@ class TestFileStorageDocs(unittest.TestCase):
         print('..... For FileStorage Class .....')
         print('.................................\n\n')
 
-    def tearDownClass():
-        """tidies up the tests removing storage objects"""
+    @classmethod
+    def tearDownClass(cls):
+        """Tidies up the tests removing storage objects"""
         storage.delete_all()
-        remove(F)
+        if path.exists(F):
+            remove(F)
 
     def test_doc_file(self):
         """... documentation for the file"""
@@ -91,10 +93,12 @@ class TestBmFsInstances(unittest.TestCase):
         cls.bm_obj.save()
         cls.state_obj.save()
 
-    def tearDownClass():
+    @classmethod
+    def tearDownClass(cls):
         """tidies up the tests removing storage objects"""
         storage.delete_all()
-        remove(F)
+        if path.exists(F):
+            remove(F)
 
     def setUp(self):
         """initializes new storage object for testing"""
@@ -107,7 +111,8 @@ class TestBmFsInstances(unittest.TestCase):
 
     def test_storage_file_exists(self):
         """... checks proper FileStorage instantiation"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.bm_obj.save()
         self.assertTrue(path.isfile(F))
 
@@ -119,7 +124,7 @@ class TestBmFsInstances(unittest.TestCase):
         for k in all_obj.keys():
             if bm_id in k:
                 actual = True
-        self.assertTrue(True)
+        self.assertTrue(actual)
 
     def test_all_state(self):
         """... checks if all() function returns newly created state instance"""
@@ -129,11 +134,12 @@ class TestBmFsInstances(unittest.TestCase):
         for k in state_objs.keys():
             if state_id in k:
                 actual = True
-        self.assertTrue(True)
+        self.assertTrue(actual)
 
     def test_obj_saved_to_file(self):
         """... checks proper FileStorage instantiation"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.bm_obj.save()
         bm_id = self.bm_obj.id
         actual = False
@@ -142,7 +148,7 @@ class TestBmFsInstances(unittest.TestCase):
         for k in storage_dict.keys():
             if bm_id in k:
                 actual = True
-        self.assertTrue(True)
+        self.assertTrue(actual)
 
     def test_to_json(self):
         """... to_json should return serializable dict object"""
@@ -150,13 +156,14 @@ class TestBmFsInstances(unittest.TestCase):
         actual = True
         try:
             serialized = json.dumps(my_model_json)
-        except:
+        except TypeError:
             actual = False
         self.assertTrue(actual)
 
     def test_reload(self):
         """... checks proper usage of reload function"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.bm_obj.save()
         bm_id = self.bm_obj.id
         actual = False
@@ -170,7 +177,8 @@ class TestBmFsInstances(unittest.TestCase):
 
     def test_save_reload_class(self):
         """... checks proper usage of class attribute in file storage"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.bm_obj.save()
         bm_id = self.bm_obj.id
         actual = False
@@ -200,10 +208,12 @@ class TestUserFsInstances(unittest.TestCase):
         cls.bm_obj = BaseModel()
         cls.bm_obj.save()
 
-    def tearDownClass():
+    @classmethod
+    def tearDownClass(cls):
         """tidies up the tests removing storage objects"""
         storage.delete_all()
-        remove(F)
+        if path.exists(F):
+            remove(F)
 
     def setUp(self):
         """initializes new user for testing"""
@@ -212,7 +222,8 @@ class TestUserFsInstances(unittest.TestCase):
 
     def test_storage_file_exists(self):
         """... checks proper FileStorage instantiation"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.user.save()
         self.assertTrue(path.isfile(F))
 
@@ -247,7 +258,8 @@ class TestUserFsInstances(unittest.TestCase):
 
     def test_obj_saved_to_file(self):
         """... checks proper FileStorage instantiation"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.user.save()
         u_id = self.user.id
         actual = False
@@ -260,7 +272,8 @@ class TestUserFsInstances(unittest.TestCase):
 
     def test_reload(self):
         """... checks proper usage of reload function"""
-        remove(F)
+        if path.exists(F):
+            remove(F)
         self.bm_obj.save()
         u_id = self.bm_obj.id
         actual = False
@@ -274,4 +287,4 @@ class TestUserFsInstances(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main
+    unittest.main()

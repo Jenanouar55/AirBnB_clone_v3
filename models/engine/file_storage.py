@@ -12,7 +12,7 @@ to_json = base_model.BaseModel.to_json
 
 class FileStorage:
     """
-        handles long term storage of all class instances
+    Handles long term storage of all class instances
     """
     CNC = {
         'BaseModel': base_model.BaseModel,
@@ -32,7 +32,7 @@ class FileStorage:
 
     def all(self, cls=None):
         """
-            returns private attribute: __objects
+        Returns private attribute: __objects
         """
         if cls is not None:
             new_objs = {}
@@ -45,40 +45,45 @@ class FileStorage:
 
     def new(self, obj):
         """
-            sets / updates in __objects the obj with key <obj class name>.id
+        Sets / updates in __objects the obj with key <obj class name>.id
         """
         bm_id = "{}.{}".format(type(obj).__name__, obj.id)
         FileStorage.__objects[bm_id] = obj
 
     def save(self):
         """
-            serializes __objects to the JSON file (path: __file_path)
+        Serializes __objects to the JSON file (path: __file_path)
         """
         fname = FileStorage.__file_path
         storage_d = {}
         for bm_id, bm_obj in FileStorage.__objects.items():
             storage_d[bm_id] = bm_obj.to_json(saving_file_storage=True)
-        with open(fname, mode='w', encoding='utf-8') as f_io:
-            json.dump(storage_d, f_io)
+        try:
+            with open(fname, mode='w', encoding='utf-8') as f_io:
+                json.dump(storage_d, f_io)
+        except Exception as e:
+            print(f"An error occurred while saving: {e}")
 
     def reload(self):
         """
-            if file exists, deserializes JSON file to __objects, else nothing
+        If file exists, deserializes JSON file to __objects, else nothing
         """
         fname = FileStorage.__file_path
         FileStorage.__objects = {}
         try:
             with open(fname, mode='r', encoding='utf-8') as f_io:
                 new_objs = json.load(f_io)
-        except:
-            return
-        for o_id, d in new_objs.items():
-            k_cls = d['__class__']
-            FileStorage.__objects[o_id] = FileStorage.CNC[k_cls](**d)
+            for o_id, d in new_objs.items():
+                k_cls = d['__class__']
+                FileStorage.__objects[o_id] = FileStorage.CNC[k_cls](**d)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"An error occurred while reloading: {e}")
 
     def delete(self, obj=None):
         """
-            deletes obj from __objects if it's inside
+        Deletes obj from __objects if it's inside
         """
         if obj:
             obj_ref = "{}.{}".format(type(obj).__name__, obj.id)
@@ -89,26 +94,26 @@ class FileStorage:
 
     def delete_all(self):
         """
-            deletes all stored objects, for testing purposes
+        Deletes all stored objects, for testing purposes
         """
         try:
-            with open(FileStorage.__file_path, mode='w') as f_io:
+            with open(FileStorage.__file_path, mode='w'):
                 pass
-        except:
-            pass
+        except Exception as e:
+            print(f"An error occurred while deleting all: {e}")
         del FileStorage.__objects
         FileStorage.__objects = {}
         self.save()
 
     def close(self):
         """
-            calls the reload() method for deserialization from JSON to objects
+        Calls the reload() method for deserialization from JSON to objects
         """
         self.reload()
 
     def get(self, cls, id):
         """
-            retrieves one object based on class name and id
+        Retrieves one object based on class name and id
         """
         if cls and id:
             fetch_obj = "{}.{}".format(cls, id)
@@ -118,6 +123,6 @@ class FileStorage:
 
     def count(self, cls=None):
         """
-        count of all objects in storage
+        Count of all objects in storage
         """
-        return (len(self.all(cls)))
+        return len(self.all(cls))
