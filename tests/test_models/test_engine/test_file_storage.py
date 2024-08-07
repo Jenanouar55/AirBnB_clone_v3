@@ -30,12 +30,21 @@ class TestFileStorageDocs(unittest.TestCase):
         """Set up for the doc tests"""
         cls.fs_f = inspect.getmembers(FileStorage, inspect.isfunction)
 
+<<<<<<< HEAD
     def test_pep8_conformance_file_storage(self):
         """Test that models/engine/file_storage.py conforms to PEP8."""
         pep8s = pep8.StyleGuide(quiet=True)
         result = pep8s.check_files(['models/engine/file_storage.py'])
         self.assertEqual(result.total_errors, 0,
                          "Found code style errors (and warnings).")
+=======
+    @classmethod
+    def tearDownClass(cls):
+        """Tidies up the tests removing storage objects"""
+        storage.delete_all()
+        if path.exists(F):
+            remove(F)
+>>>>>>> 9680e81 (pushed)
 
     def test_pep8_conformance_test_file_storage(self):
         """Test tests/test_models/test_file_storage.py conforms to PEP8."""
@@ -94,6 +103,7 @@ class TestFileStorage(unittest.TestCase):
                 self.assertEqual(test_dict, storage._FileStorage__objects)
         FileStorage._FileStorage__objects = save
 
+<<<<<<< HEAD
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
@@ -113,3 +123,200 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+=======
+    @classmethod
+    def tearDownClass(cls):
+        """tidies up the tests removing storage objects"""
+        storage.delete_all()
+        if path.exists(F):
+            remove(F)
+
+    def setUp(self):
+        """initializes new storage object for testing"""
+        self.bm_obj = TestBmFsInstances.bm_obj
+        self.state_obj = TestBmFsInstances.state_obj
+
+    def test_instantiation(self):
+        """... checks proper FileStorage instantiation"""
+        self.assertIsInstance(storage, FileStorage)
+
+    def test_storage_file_exists(self):
+        """... checks proper FileStorage instantiation"""
+        if path.exists(F):
+            remove(F)
+        self.bm_obj.save()
+        self.assertTrue(path.isfile(F))
+
+    def test_all(self):
+        """... checks if all() function returns newly created instance"""
+        bm_id = self.bm_obj.id
+        all_obj = storage.all()
+        actual = False
+        for k in all_obj.keys():
+            if bm_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_all_state(self):
+        """... checks if all() function returns newly created state instance"""
+        state_id = self.state_obj.id
+        state_objs = storage.all("State")
+        actual = False
+        for k in state_objs.keys():
+            if state_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_obj_saved_to_file(self):
+        """... checks proper FileStorage instantiation"""
+        if path.exists(F):
+            remove(F)
+        self.bm_obj.save()
+        bm_id = self.bm_obj.id
+        actual = False
+        with open(F, mode='r', encoding='utf-8') as f_obj:
+            storage_dict = json.load(f_obj)
+        for k in storage_dict.keys():
+            if bm_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_to_json(self):
+        """... to_json should return serializable dict object"""
+        my_model_json = self.bm_obj.to_json()
+        actual = True
+        try:
+            serialized = json.dumps(my_model_json)
+        except TypeError:
+            actual = False
+        self.assertTrue(actual)
+
+    def test_reload(self):
+        """... checks proper usage of reload function"""
+        if path.exists(F):
+            remove(F)
+        self.bm_obj.save()
+        bm_id = self.bm_obj.id
+        actual = False
+        new_storage = FileStorage()
+        new_storage.reload()
+        all_obj = new_storage.all()
+        for k in all_obj.keys():
+            if bm_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_save_reload_class(self):
+        """... checks proper usage of class attribute in file storage"""
+        if path.exists(F):
+            remove(F)
+        self.bm_obj.save()
+        bm_id = self.bm_obj.id
+        actual = False
+        new_storage = FileStorage()
+        new_storage.reload()
+        all_obj = new_storage.all()
+        for k, v in all_obj.items():
+            if bm_id in k:
+                if type(v).__name__ == 'BaseModel':
+                    actual = True
+        self.assertTrue(actual)
+
+
+@unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+class TestUserFsInstances(unittest.TestCase):
+    """testing for class instances"""
+
+    @classmethod
+    def setUpClass(cls):
+        """sets up the class"""
+        print('\n\n.................................')
+        print('...... Testing FileStorage ......')
+        print('.......... User  Class ..........')
+        print('.................................\n\n')
+        cls.user = User()
+        cls.user.save()
+        cls.bm_obj = BaseModel()
+        cls.bm_obj.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        """tidies up the tests removing storage objects"""
+        storage.delete_all()
+        if path.exists(F):
+            remove(F)
+
+    def setUp(self):
+        """initializes new user for testing"""
+        self.user = TestUserFsInstances.user
+        self.bm_obj = TestUserFsInstances.bm_obj
+
+    def test_storage_file_exists(self):
+        """... checks proper FileStorage instantiation"""
+        if path.exists(F):
+            remove(F)
+        self.user.save()
+        self.assertTrue(path.isfile(F))
+
+    def test_count_cls(self):
+        """... checks count method with class input arg"""
+        count_user = storage.count('User')
+        expected = 1
+        self.assertEqual(expected, count_user)
+
+    def test_count_all(self):
+        """... checks the count method with no class input"""
+        count_all = storage.count()
+        expected = 2
+        self.assertEqual(expected, count_all)
+
+    def test_get_cls_id(self):
+        """... checks get method with class and id inputs"""
+        duplicate = storage.get('User', self.user.id)
+        expected = self.user.id
+        actual = duplicate.id
+        self.assertEqual(expected, actual)
+
+    def test_all(self):
+        """... checks if all() function returns newly created instance"""
+        u_id = self.user.id
+        all_obj = storage.all()
+        actual = False
+        for k in all_obj.keys():
+            if u_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_obj_saved_to_file(self):
+        """... checks proper FileStorage instantiation"""
+        if path.exists(F):
+            remove(F)
+        self.user.save()
+        u_id = self.user.id
+        actual = False
+        with open(F, mode='r', encoding='utf-8') as f_obj:
+            storage_dict = json.load(f_obj)
+        for k in storage_dict.keys():
+            if u_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+    def test_reload(self):
+        """... checks proper usage of reload function"""
+        if path.exists(F):
+            remove(F)
+        self.bm_obj.save()
+        u_id = self.bm_obj.id
+        actual = False
+        new_storage = FileStorage()
+        new_storage.reload()
+        all_obj = new_storage.all()
+        for k in all_obj.keys():
+            if u_id in k:
+                actual = True
+        self.assertTrue(actual)
+
+
+if __name__ == '__main__':
+    unittest.main()
+>>>>>>> 9680e81 (pushed)
