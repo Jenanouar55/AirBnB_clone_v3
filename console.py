@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """
-Command interpreter for  AirBnB project
+Command interpreter for AirBnB project
 """
 import os
 import cmd
+import json
 from models import base_model, user, storage, CNC
 
 BaseModel = base_model.BaseModel
@@ -12,7 +13,7 @@ User = user.User
 
 class HBNBCommand(cmd.Cmd):
     """
-        Command inerpreter class
+        Command interpreter class
     """
     prompt = '(hbnb) '
     ERR = [
@@ -22,25 +23,25 @@ class HBNBCommand(cmd.Cmd):
         '** no instance found **',
         '** attribute name missing **',
         '** value missing **',
-        ]
+    ]
 
     def preloop(self):
         """
             handles intro to command interpreter
         """
-        print('.----------------------------.')
-        print('|    Welcome to hbnb CLI!    |')
-        print('|   for help, input \'help\'   |')
-        print('|   for quit, input \'quit\'   |')
-        print('.----------------------------.')
+        print(r'.----------------------------.')
+        print(r'|    Welcome to hbnb CLI!    |')
+        print(r'|   for help, input \'help\'   |')
+        print(r'|   for quit, input \'quit\'   |')
+        print(r'.----------------------------.')
 
     def postloop(self):
         """
             handles exit to command interpreter
         """
-        print('.----------------------------.')
-        print('|  Well, that sure was fun!  |')
-        print('.----------------------------.')
+        print(r'.----------------------------.')
+        print(r'|  Well, that sure was fun!  |')
+        print(r'.----------------------------.')
 
     def default(self, line):
         """
@@ -75,7 +76,7 @@ class HBNBCommand(cmd.Cmd):
             private checks for missing ID or unknown ID
         """
         error = 0
-        if (len(arg) < 2):
+        if len(arg) < 2:
             error += 1
             print(HBNBCommand.ERR[2])
         if not error:
@@ -92,11 +93,11 @@ class HBNBCommand(cmd.Cmd):
         """airbnb: airbnb
         SYNOPSIS: Command changes prompt string"""
         print("                      __ ___                        ")
-        print("    _     _  _ _||\ |/  \ | _  _  _|_|_     _  _ _| ")
-        print("|_||_)\)/(_|| (_|| \|\__/ || )(_)| |_| )\)/(_|| (_| ")
+        print("    _     _  _ _||\\ |/  \\ | _  _  _|_|_     _  _ _| ")
+        print(" |_||_))/(_|| (_|| \\|\\__/ || )(_)| |_| ))/(_|| (_| ")
         print("   |                                                ")
         if HBNBCommand.prompt == '(hbnb) ':
-            HBNBCommand.prompt = " /_ /_ _  /_\n/ //_// //_/ "
+            HBNBCommand.prompt = " /_ /_ _  /_\\n/ //_// //_/ "
         else:
             HBNBCommand.prompt = '(hbnb) '
         arg = arg.split()
@@ -121,7 +122,7 @@ class HBNBCommand(cmd.Cmd):
             index = value.find('\\', index)
             if index == -1:
                 break
-            if value[index+1] == '"':
+            if value[index + 1] == '"':
                 value_list = list(value)
                 del value_list[index]
                 value = ''.join(value_list)
@@ -130,15 +131,15 @@ class HBNBCommand(cmd.Cmd):
 
     def __parse_number(self, value):
         """ parses attribute value passed as number """
-        if value.find('.') != -1:
+        if '.' in value:
             try:
                 value = float(value)
-            except:
+            except ValueError:
                 pass
         else:
             try:
                 value = int(value)
-            except:
+            except ValueError:
                 pass
         return value
 
@@ -149,9 +150,9 @@ class HBNBCommand(cmd.Cmd):
         arg = arg.split()
         error = self.__class_err(arg)
         if not error:
-            for k, v in CNC.items():
-                if k == arg[0]:
-                    my_obj = v()
+            for class_name, cls in CNC.items():
+                if class_name == arg[0]:
+                    my_obj = cls()
                     for param in arg[1:]:
                         attribute = param.split('=')
                         value = attribute[1]
@@ -174,9 +175,9 @@ class HBNBCommand(cmd.Cmd):
             error += self.__id_err(arg)
         if not error:
             file_storage_objs = storage.all()
-            for k, v in file_storage_objs.items():
-                if arg[1] in k and arg[0] in k:
-                    print(v)
+            for key, value in file_storage_objs.items():
+                if arg[1] in key and arg[0] in key:
+                    print(value)
 
     def do_all(self, arg):
         """all: all [ARG]
@@ -185,34 +186,34 @@ class HBNBCommand(cmd.Cmd):
         error = 0
         if arg:
             arg = arg.split()
-            arg = str(arg[0])
-            error = self.__class_err(arg)
+            class_name = str(arg[0])
+            error = self.__class_err(class_name)
         if not error:
-            file_storage_objs = storage.all(arg)
-            l = 0
-            if arg:
-                for v in file_storage_objs.values():
-                    if isinstance(arg, str):
-                        if type(v).__name__ == CNC[arg].__name__:
-                            l += 1
+            file_storage_objs = storage.all(class_name)
+            total_objects = 0
+            if class_name:
+                for obj in file_storage_objs.values():
+                    if isinstance(class_name, str):
+                        if type(obj).__name__ == CNC[class_name].__name__:
+                            total_objects += 1
                     else:
-                        if type(v).__name__ == CNC[arg[0]].__name__:
-                            l += 1
-                c = 0
-                for v in file_storage_objs.values():
-                    if isinstance(arg, str):
-                        if type(v).__name__ == CNC[arg].__name__:
-                            c += 1
-                            print(v, end=(', ' if c < l else ''))
-                    else:
-                        if type(v).__name__ == CNC[arg[0]].__name__:
-                            c += 1
-                            print(v, end=(', ' if c < l else ''))
+                        if type(obj).__name__ == CNC[class_name[0]].__name__:
+                            total_objects += 1
+            count = 0
+            for obj in file_storage_objs.values():
+                if isinstance(class_name, str):
+                    if type(obj).__name__ == CNC[class_name].__name__:
+                        count += 1
+                        print(obj, end=(', ' if count < total_objects else ''))
+                else:
+                    if type(obj).__name__ == CNC[class_name[0]].__name__:
+                        count += 1
+                        print(obj, end=(', ' if count < total_objects else ''))
             else:
-                l = len(file_storage_objs)
-                c = 0
-                for v in file_storage_objs.values():
-                    print(v, end=(', ' if c < l else ''))
+                total_objects = len(file_storage_objs)
+                count = 0
+                for obj in file_storage_objs.values():
+                    print(obj, end=(', ' if count < total_objects else ''))
             print()
 
     def do_destroy(self, arg):
@@ -226,34 +227,34 @@ class HBNBCommand(cmd.Cmd):
             error += self.__id_err(arg)
         if not error:
             file_storage_objs = storage.all()
-            for k in file_storage_objs.keys():
-                if arg[1] in k and arg[0] in k:
-                    del file_storage_objs[k]
+            for key in file_storage_objs.keys():
+                if arg[1] in key and arg[0] in key:
+                    del file_storage_objs[key]
                     storage.save()
 
-    def __rreplace(self, s, l):
-        for c in l:
-            s = s.replace(c, '')
+    def __rreplace(self, s, characters):
+        for char in characters:
+            s = s.replace(char, '')
         return s
 
     def __check_dict(self, arg):
         """checks if the arguments input has a dictionary"""
-        if '{' and '}' in arg:
-            l = arg.split('{')[1]
-            l = l.split(', ')
-            l = list(s.split(':') for s in l)
-            d = {}
-            for subl in l:
-                k = subl[0].strip('"\' {}')
-                v = subl[1].strip('"\' {}')
-                d[k] = v
-            return d
+        if '{' in arg and '}' in arg:
+            dict_part = arg.split('{')[1]
+            dict_items = dict_part.split(', ')
+            dict_list = [item.split(':') for item in dict_items]
+            dictionary = {}
+            for sublist in dict_list:
+                key = sublist[0].strip('"\' {}')
+                value = sublist[1].strip('"\' {}')
+                dictionary[key] = value
+            return dictionary
         else:
             return None
 
     def __handle_update_err(self, arg):
         """checks for all errors in update"""
-        d = self.__check_dict(arg)
+        dictionary = self.__check_dict(arg)
         arg = self.__rreplace(arg, [',', '"'])
         arg = arg.split()
         error = self.__class_err(arg)
@@ -262,15 +263,15 @@ class HBNBCommand(cmd.Cmd):
         if not error:
             valid_id = 0
             file_storage_objs = storage.all()
-            for k in file_storage_objs.keys():
-                if arg[1] in k and arg[0] in k:
-                    key = k
+            for key in file_storage_objs.keys():
+                if arg[1] in key and arg[0] in key:
+                    key_match = key
             if len(arg) < 3:
                 print(HBNBCommand.ERR[4])
             elif len(arg) < 4:
                 print(HBNBCommand.ERR[5])
             else:
-                return [1, arg, d, file_storage_objs, key]
+                return [1, arg, dictionary, file_storage_objs, key_match]
         return [0]
 
     def do_update(self, arg):
@@ -278,88 +279,29 @@ class HBNBCommand(cmd.Cmd):
         ARG = Class
         ARG1 = ID #
         ARG2 = attribute name
-        ARG3 = value of new attribute
-        SYNOPSIS: updates or adds a new attribute and value of given Class"""
+        ARG3 = value
+        SYNOPSIS: updates attribute of an object from given Class"""
         arg_inv = self.__handle_update_err(arg)
         if arg_inv[0]:
             arg = arg_inv[1]
-            d = arg_inv[2]
+            dictionary = arg_inv[2]
             file_storage_objs = arg_inv[3]
             key = arg_inv[4]
-            if not d:
-                avalue = arg[3].strip('"')
-                if avalue.isdigit():
-                    avalue = int(avalue)
-                file_storage_objs[key].bm_update(arg[2], avalue)
-            else:
-                for k, v in d.items():
-                    if v.isdigit():
-                        v = int(v)
-                    file_storage_objs[key].bm_update(k, v)
+            my_obj = file_storage_objs[key]
+            for k, v in dictionary.items():
+                my_obj.bm_update(k, v)
+            storage.save()
 
-    def do_BaseModel(self, arg):
-        """class method with .function() syntax
-        Usage: BaseModel.<command>(<id>)"""
-        self.__parse_exec('BaseModel', arg)
+    def do_count(self, arg):
+        """count: count [ARG]
+        ARG = Class
+        SYNOPSIS: counts all objects of a given class"""
+        error = self.__class_err(arg)
+        if not error:
+            file_storage_objs = storage.all(arg)
+            total_objects = len(file_storage_objs)
+            print(total_objects)
 
-    def do_Amenity(self, arg):
-        """class method with .function() syntax
-        Usage: Amenity.<command>(<id>)"""
-        self.__parse_exec('Amenity', arg)
-
-    def do_City(self, arg):
-        """class method with .function() syntax
-        Usage: City.<command>(<id>)"""
-        self.__parse_exec('City', arg)
-
-    def do_Place(self, arg):
-        """class method with .function() syntax
-        Usage: Place.<command>(<id>)"""
-        self.__parse_exec('Place', arg)
-
-    def do_Review(self, arg):
-        """class method with .function() syntax
-        Usage: Review.<command>(<id>)"""
-        self.__parse_exec('Review', arg)
-
-    def do_State(self, arg):
-        """class method with .function() syntax
-        Usage: State.<command>(<id>)"""
-        self.__parse_exec('State', arg)
-
-    def do_User(self, arg):
-        """class method with .function() syntax
-        Usage: User.<command>(<id>)"""
-        self.__parse_exec('User', arg)
-
-    def __count(self, arg):
-        args = arg.split()
-        file_storage_objs = storage.all()
-        count = 0
-        for k in file_storage_objs.keys():
-            if args[0] in k:
-                count += 1
-        print(count)
-
-    def __parse_exec(self, c, arg):
-        CMD_MATCH = {
-            '.all': self.do_all,
-            '.count': self.__count,
-            '.show': self.do_show,
-            '.destroy': self.do_destroy,
-            '.update': self.do_update,
-            '.create': self.do_create,
-        }
-        if '(' and ')' in arg:
-            check = arg.split('(')
-            new_arg = "{} {}".format(c, check[1][:-1])
-            for k, v in CMD_MATCH.items():
-                if k == check[0]:
-                    if ((',' or '"' in new_arg) and k != '.update'):
-                        new_arg = self.__rreplace(new_arg, ['"', ','])
-                    v(new_arg)
-                    return
-        self.default(arg)
 
 if __name__ == '__main__':
     HBNBCommand().cmdloop()
